@@ -29,3 +29,26 @@ export const moodOutputSchema = z.object({
     })
   ),
 });
+
+export const trackArtistSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  href: z.string(),
+});
+
+export const trackContentSchema = z.object({
+  id: z.string(),
+  trackTitle: z.string(),
+  artists: z.array(trackArtistSchema),
+  durationMs: z.number().int(),
+  href: z.string(),
+  popularity: z.number().int().min(0),
+});
+
+export const trackContentResponseSchema = z.object({
+  content: z.array(trackContentSchema),
+});
+
+export type TrackArtist = z.infer<typeof trackArtistSchema>;
+export type TrackContent = z.infer<typeof trackContentSchema>;
+export type TrackContentResponse = z.infer<typeof trackContentResponseSchema>;
