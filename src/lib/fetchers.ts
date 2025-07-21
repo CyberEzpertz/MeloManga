@@ -1,8 +1,6 @@
-import { google } from "@ai-sdk/google";
-import { generateObject } from "ai";
 import { PDFDocument } from "pdf-lib";
+import { getMoodSegments } from "./recommendation";
 import {
-  moodOutputSchema,
   RecommendationParameters,
   trackContentResponseSchema,
 } from "./schemas";
@@ -128,32 +126,34 @@ export async function getRecommendedURLs(chapterId: string) {
 
   console.log("PDF created, sending to AI for mood analysis...");
 
-  const result = await generateObject({
-    model: google("gemini-2.5-flash"),
-    schema: moodOutputSchema,
-    system: RECOMMENDATION_PROMPT,
-    messages: [
-      {
-        role: "user",
-        content: [
-          {
-            type: "file",
-            mimeType: "application/pdf",
-            data: pdfBytes,
-          },
-          {
-            type: "text",
-            text: `Analyze the chapter with ID ${chapterId} and provide mood recommendations.`,
-          },
-        ],
-      },
-    ],
-  });
+  // const result = await generateObject({
+  //   model: google("gemini-2.5-flash"),
+  //   schema: moodOutputSchema,
+  //   system: RECOMMENDATION_PROMPT,
+  //   messages: [
+  //     {
+  //       role: "user",
+  //       content: [
+  //         {
+  //           type: "file",
+  //           mimeType: "application/pdf",
+  //           data: pdfBytes,
+  //         },
+  //         {
+  //           type: "text",
+  //           text: `Analyze the chapter with ID ${chapterId} and provide mood recommendations.`,
+  //         },
+  //       ],
+  //     },
+  //   ],
+  // });
 
-  console.log("AI analysis complete:", result.object.result);
+  const { result } = await getMoodSegments(pdfBytes);
+
+  console.log("AI analysis complete:", result);
 
   const titlesPerSegment = await Promise.all(
-    result.object.result.map(async (segment) => {
+    result.map(async (segment) => {
       console.log(
         "Getting recommendations for segment:",
         segment.start,
