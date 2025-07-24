@@ -1,11 +1,11 @@
 import { z } from "zod";
+import { MoodType } from "./moods";
 
 // Music Parameters Schema
 export const recommendationParametersSchema = z.object({
   acousticness: z.number().min(0).max(1),
   danceability: z.number().min(0).max(1),
   energy: z.number().min(0).max(1),
-  instrumentalness: z.number().min(0.5).max(1),
   liveness: z.number().min(0).max(1),
   loudness: z.number().min(-60).max(2),
   mode: z.number().int().min(0).max(1),
@@ -80,7 +80,8 @@ export const pageAnalysisResultSchema = z.object({
 export const segmentSchema = z.object({
   start: z.number().int().positive(),
   end: z.number().int().positive(),
-  mood: z.string(),
+  moodDescription: z.string(), // Detailed description of the segment's emotional tone
+  moodCategory: MoodType, // Strict category for music selection
   confidence: z.number().min(0).max(1),
   emotions: z.array(z.string()),
   intensity: z.enum(["low", "medium", "high", "extreme"]),
@@ -105,7 +106,8 @@ export const moodOutputSchema = z.object({
     z.object({
       start: z.number().int(),
       end: z.number().int(),
-      mood: z.string(),
+      moodDescription: z.string(),
+      moodCategory: MoodType,
       confidence: z.number().min(0).max(1),
       parameters: recommendationParametersSchema,
     })

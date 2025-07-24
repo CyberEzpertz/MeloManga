@@ -1,42 +1,10 @@
 import { PDFDocument } from "pdf-lib";
+import { moodToSeedSongs } from "./moods";
 import { getMoodSegments } from "./recommendation";
 import {
   RecommendationParameters,
   trackContentResponseSchema,
 } from "./schemas";
-
-const RECOMMENDATION_PROMPT = `
-Analyze the sequence of images in the provided manga chapter (PDF). Segment the story pages into cohesive emotional mood groups based on visual storytelling and accompanying text.
-
-Guidelines:
-- **Ignore non-story pages** such as the title page, credits, translator notes, donation appeals, and similar fillers. Do not include them in any output.
-- Each segment should reflect a **consistent emotional tone** (e.g., hopeful, tense, melancholic) inferred from the story's visuals and pacing.
-- Use **visual elements** like facial expressions, panel layout, background detail, shading, and movement to determine mood.
-- Use dialogue or narration to support mood identification when necessary, but **prioritize visual cues**.
-- Segments should consist of **at least 6 pages**, unless a **strong, clearly defined emotional shift** justifies a shorter span.
-- **Favor longer segments** that preserve emotional continuity and minimize disruptive mood changes.
-- **Avoid excessive segmentation.** Only split when there's a major tonal transition or narrative shift.
-- Emotional transitions between segments should **progress smoothly** — **do not jump** drastically between moods unless the story demands it (e.g., a sudden twist or climax).
-
-For each segment, provide:
-- \`start\`: Starting story page number (excluding fillers)
-- \`end\`: Ending story page number
-- \`mood\`: A concise emotional label (e.g., joyful, dark, anxious)
-- \`confidence\`: A float between 0.0–1.0 estimating confidence in mood classification
-- \`parameters\`: JSON object with audio traits suitable for **anime-style instrumental music**, following these constraints:
-  - \`acousticness\`: 0.1–1.0 (higher for organic/sentimental moments)
-  - \`danceability\`: 0.0–0.5 (generally low to maintain narrative focus)
-  - \`energy\`: 0.1–1.0 (builds with tension or action)
-  - \`instrumentalness\`: 0.7–1.0 (**must be ≥ 0.7 to ensure instrumental-only music**)
-  - \`liveness\`: 0.1–0.5 (prefer studio-like recordings, avoid concert feel)
-  - \`loudness\`: -25.0 to -5.0 (varies based on mood intensity)
-  - \`mode\`: 0 for minor (somber, emotional), 1 for major (hopeful, bright)
-  - \`speechiness\`: 0.0–0.2 (very low to eliminate spoken word)
-  - \`tempo\`: 60.0–180.0 BPM (aligns with scene pacing)
-  - \`valence\`: 0.0–1.0 (lower = darker, higher = more uplifting)
-
-Avoid vocal music and prioritize **emotional cohesion** across segments. The music should feel like a film score — **enhancing** rather than distracting from the visual storytelling.
-`;
 
 export async function getChapterImages(chapterId: string) {
   try {
@@ -59,8 +27,9 @@ export async function getChapterImages(chapterId: string) {
 
 // Refer to this: https://reccobeats.com/docs/apis/get-recommendation
 export async function getTitleRecommendations(
-  parameters: RecommendationParameters
-): Promise<string[]> {
+  parameters: RecommendationParameters,
+  moodCategory: string
+) {
   const myHeaders = new Headers();
 
   // Convert parameters to URLSearchParams
@@ -69,18 +38,24 @@ export async function getTitleRecommendations(
     searchParams.append(key, value.toString());
   });
 
-  const seedSongs = [
-    "1x2uye0yok42ce8EjRZCil", // GATE OF STEINER
-    "5FUUGPgA1J5QCkdfnhfeCB", // Surechigau Kokoro to Kokoro,
-    "0hHc2igYYlSUyZdByauJmB", // You Say Run
-    "6AFkv6rIVRusZNifR74Q7t", // Shingeki GT 20130218 Kyojin
-    "5R6jJiQXA866TsPs3xtaAK", // Nakama
+  // Get seed songs based on mood category or use default seeds if not found
+  const seedSongs = moodToSeedSongs[
+    moodCategory as keyof typeof moodToSeedSongs
+  ] ?? [
+    "1x2uye0yok42ce8EjRZCil", // GATE OF STEINER (default fallback)
   ];
+
+  if (seedSongs.length === 0) {
+    console.warn(
+      `No seed songs found for mood category: ${moodCategory}, using default`
+    );
+  }
 
   const NUM_RECOMMENDATIONS = 2;
 
   searchParams.append("size", NUM_RECOMMENDATIONS.toString());
   searchParams.append("seeds", seedSongs.join(","));
+  searchParams.append("instrumentalness", "1.0");
 
   const recommendations = await fetch(
     `https://api.reccobeats.com/v1/track/recommendation?${searchParams.toString()}`,
@@ -108,8 +83,13 @@ export async function getTitleRecommendations(
 
   // console.log("Recommendations received:", parsed.data);
 
-  const titles = parsed.data.content.map((item) => item.href);
-  return titles;
+  const data = parsed.data.content.map((item) => ({
+    href: item.href,
+    title: item.trackTitle,
+    id: item.id,
+  }));
+
+  return data;
 }
 
 export async function getRecommendedURLs(chapterId: string) {
@@ -126,28 +106,6 @@ export async function getRecommendedURLs(chapterId: string) {
 
   console.log("PDF created, sending to AI for mood analysis...");
 
-  // const result = await generateObject({
-  //   model: google("gemini-2.5-flash"),
-  //   schema: moodOutputSchema,
-  //   system: RECOMMENDATION_PROMPT,
-  //   messages: [
-  //     {
-  //       role: "user",
-  //       content: [
-  //         {
-  //           type: "file",
-  //           mimeType: "application/pdf",
-  //           data: pdfBytes,
-  //         },
-  //         {
-  //           type: "text",
-  //           text: `Analyze the chapter with ID ${chapterId} and provide mood recommendations.`,
-  //         },
-  //       ],
-  //     },
-  //   ],
-  // });
-
   const { result } = await getMoodSegments(pdfBytes);
 
   console.log("AI analysis complete:", result);
@@ -157,9 +115,16 @@ export async function getRecommendedURLs(chapterId: string) {
       console.log(
         "Getting recommendations for segment:",
         segment.start,
-        segment.end
+        segment.end,
+        "mood category:",
+        segment.moodCategory,
+        "description:",
+        segment.moodDescription
       );
-      const recommendations = await getTitleRecommendations(segment.parameters);
+      const recommendations = await getTitleRecommendations(
+        segment.parameters,
+        segment.moodCategory
+      );
 
       if (!recommendations || recommendations.length === 0) {
         console.warn(
@@ -167,15 +132,11 @@ export async function getRecommendedURLs(chapterId: string) {
         );
       }
 
-      // console.log(
-      //   `Segment from page ${segment.start} to ${segment.end} with mood "${segment.mood}" and confidence ${segment.confidence}`
-      // );
-      // console.log(`Recommendations: ${recommendations.join(", ")}`);
-
       return {
         start: segment.start,
         end: segment.end,
-        mood: segment.mood,
+        moodDescription: segment.moodDescription,
+        moodCategory: segment.moodCategory,
         confidence: segment.confidence,
         recommendations,
       };

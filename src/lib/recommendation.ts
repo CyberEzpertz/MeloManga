@@ -67,18 +67,33 @@ async function segmentationAgent(
     system: `
     Create emotionally coherent segments from manga page analysis.
     Requirements:
-    - Minimum 6 pages per segment unless strong mood shift
+    - Soft minimum of 6 pages per segment unless strong mood shift
+    - Avoid segments of only 1-3 pages
     - Clear emotional progression
     - Smooth transitions between segments
     - Consistent mood within segments
-    
+
     For each segment provide:
     1. Page range (start-end)
-    2. Primary mood
-    3. Emotional undertones
-    4. Intensity level
-    5. Transition type to next segment
-    6. Confidence score`,
+    2. Mood categorization:
+       - moodCategory: MUST be one of: ["serene", "tense", "melancholic", "action", "romantic", "whimsical"]
+       - moodDescription: Detailed emotional description (e.g., "triumphant determination", "growing anxiety")
+    3. Emotional undertones (array of complementary emotions)
+    4. Intensity level (low/medium/high/extreme)
+    5. Transition details:
+       - type: gradual/sudden/none
+       - nextMood: mood category of next segment (if applicable)
+    6. Confidence score (0.0-1.0) for mood classification
+
+    Guidelines for mood categories:
+    - serene: Peaceful, contemplative, or gently uplifting moments
+    - tense: Suspenseful, dramatic, or uncertain scenes
+    - melancholic: Emotional, sad, or reflective passages
+    - action: Combat, chase scenes, or high-stakes sequences
+    - romantic: Love scenes, tender moments, emotional connections
+    - whimsical: Comedic, lighthearted, or playful sequences
+
+    Choose the moodCategory that best fits the segment's overall tone, using moodDescription for nuanced emotional context.`,
     messages: [
       {
         role: "user",
@@ -98,18 +113,19 @@ async function musicParametersAgent(
     model: google("gemini-2.5-flash"),
     schema: moodOutputSchema,
     system: `
-    Generate music parameters for manga segments.
-    Follow these constraints:
-    - acousticness: 0.1-1.0 (organic/synthetic)
-    - danceability: 0.0-0.5 (narrative focus)
-    - energy: 0.1-1.0 (intensity)
-    - instrumentalness: 0.7-1.0 (no vocals)
-    - liveness: 0.1-0.5 (studio quality)
-    - loudness: -25.0 to -5.0 (volume)
-    - mode: 0=minor, 1=major (emotional tone)
-    - speechiness: 0.0-0.2 (no speaking)
-    - tempo: 60-180 BPM (pacing)
-    - valence: 0.0-1.0 (positivity)`,
+You are generating music parameters for manga segments. Each segment is annotated with a mood. You must generate fitting music characteristics per mood.
+
+Use the following musical parameter constraints:
+- acousticness: 0.0 to 1.0 (higher = more organic/instrumental, lower = more electronic/synthetic)
+- danceability: 0.0 to 0.5 (higher = more rhythmically fluid, lower = more static or narrative)
+- energy: 0.0 to 1.0 (intensity, dynamics, and activity of the music)
+- liveness: 0.0 to 0.5 (higher = more live/performed feel, lower = studio-like sound)
+- loudness: -25.0 to -5.0 (volume in dB, higher = louder)
+- mode: 0 = minor (darker/sadder), 1 = major (happier/brighter)
+- speechiness: 0.0 to 0.2 (higher = more vocal/spoken word presence)
+- tempo: 60 to 180 BPM (pacing of the music)
+- valence: 0.0 to 0.8 (positivity/musical brightness)
+`,
     messages: [
       {
         role: "user",
@@ -140,18 +156,6 @@ export async function getMoodSegments(
     return result;
   } catch (error) {
     console.error("Error in mood analysis pipeline:", error);
-    throw error;
-  }
-}
-
-// Test function
-async function testMoodAnalysis() {
-  try {
-    const testPdfBytes = new Uint8Array([0x25, 0x50, 0x44, 0x46]);
-    const result = await getMoodSegments(testPdfBytes);
-    console.log("Test complete. Results:", JSON.stringify(result, null, 2));
-  } catch (error) {
-    console.error("❌ Test failed:", error);
     throw error;
   }
 }
