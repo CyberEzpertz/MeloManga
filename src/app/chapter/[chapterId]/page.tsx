@@ -12,11 +12,16 @@ export default async function ChapterIdPage({
   const { chapterId } = await params;
 
   const imagesPromise = getChapterImages(chapterId);
+  //   const songsPromise = getRecommendedURLs(chapterId);
 
   return (
     //full disclosure: I used chatGPT to help with this part
     <Suspense fallback={<div>Loading...</div>}>
-      <PageViewport chapterId={chapterId} imagesPromise={imagesPromise} />
+      <PageViewport
+        chapterId={chapterId}
+        imagesPromise={imagesPromise}
+        // songsPromise={songsPromise}
+      />
     </Suspense>
   );
 }
