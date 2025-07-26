@@ -1,3 +1,4 @@
+import YouTube from "youtube-sr";
 import YTMusic from "ytmusic-api";
 
 interface YTMusicSearchResult {
@@ -42,4 +43,13 @@ export async function fetchYTMusicDataFromTitles(titles: string[]) {
   return await Promise.all(
     titles.map((title) => fetchYTMusicDataFromTitle(title))
   );
+}
+
+export async function fetchYTSearchResults(query: string) {
+  const videos = await YouTube.search(query, {
+    limit: 3,
+    type: "video",
+  });
+
+  return videos;
 }
