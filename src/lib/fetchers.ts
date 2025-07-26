@@ -5,7 +5,8 @@ import {
   RecommendationParameters,
   trackContentResponseSchema,
 } from "./schemas";
-import { Manga, Chapter } from "./types";
+import { Chapter, Manga } from "./types";
+import { fetchYTMusicDataFromTitle } from "./ytmusic";
 
 // NOTE: keep this commented here for now in case the current fetchMangaDetails breaks
 // type Tag = {
@@ -56,22 +57,26 @@ import { Manga, Chapter } from "./types";
 //   }
 // }
 
-export async function fetchMangaDetails(mangaId: string): Promise<Manga>{
-  const res = await fetch(`https://api.mangadex.org/manga/${mangaId}?includes[]=author&includes[]=artist&includes[]=cover_art`);
-  
-  if(!res.ok){
-    throw new Error('Whoops! Failed to fetch manga details.');
+export async function fetchMangaDetails(mangaId: string): Promise<Manga> {
+  const res = await fetch(
+    `https://api.mangadex.org/manga/${mangaId}?includes[]=author&includes[]=artist&includes[]=cover_art`
+  );
+
+  if (!res.ok) {
+    throw new Error("Whoops! Failed to fetch manga details.");
   }
 
   const json = await res.json();
   return json.data as Manga;
 }
 
-export async function fetchMangaChapters(mangaId: string): Promise<Chapter[]>{
-  const res = await fetch( `https://api.mangadex.org/chapter?manga=${mangaId}&limit=100&translatedLanguage[]=en&order[chapter]=desc&includes[]=scanlation_group&includes[]=user`);
+export async function fetchMangaChapters(mangaId: string): Promise<Chapter[]> {
+  const res = await fetch(
+    `https://api.mangadex.org/chapter?manga=${mangaId}&limit=100&translatedLanguage[]=en&order[chapter]=desc&includes[]=scanlation_group&includes[]=user`
+  );
 
-  if(!res.ok){
-    throw new Error('Whoops! Failed to fetch manga chapters.');
+  if (!res.ok) {
+    throw new Error("Whoops! Failed to fetch manga chapters.");
   }
 
   const json = await res.json();
@@ -161,6 +166,7 @@ export async function getTitleRecommendations(
     href: item.href,
     title: item.trackTitle,
     id: item.id,
+    artist: item.artists.join(", "),
   }));
 
   return data;
@@ -214,6 +220,13 @@ export async function getRecommendedURLs(chapterId: string) {
         confidence: segment.confidence,
         recommendations,
       };
+    })
+  );
+
+  const youtubeURLs = await Promise.all(
+    titlesPerSegment.map((segment) => {
+      const searchQuery = `${segment.recommendations[0]?.artist} - ${segment.recommendations[0]?.title}`;
+      return fetchYTMusicDataFromTitle(searchQuery);
     })
   );
 
