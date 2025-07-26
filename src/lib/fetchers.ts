@@ -5,6 +5,80 @@ import {
   RecommendationParameters,
   trackContentResponseSchema,
 } from "./schemas";
+import { Manga, Chapter } from "./types";
+
+// NOTE: keep this commented here for now in case the current fetchMangaDetails breaks
+// type Tag = {
+//   id: string;
+//   type: string;
+//   attributes:{
+//     name: {
+//       [lang: string]: string;
+//     };
+//     group: string;
+//   };
+// };
+
+// export async function fetchMangaDetails(mangaId:string){
+//   try{
+//     const res = await fetch('https://api.mangadex.org/manga/${mangaId}?includes[]=author&includes[]=artist&includes[]=tags');
+//     const data = await res.json();
+//     const manga = data.data;
+//     const attributes = manga.attributes
+//     const title = attributes.title.en;
+//     const description = attributes.description.en;
+
+//     // get author and artist
+//     const author = manga.relationships.find((rel: any) => rel.type === "author")?.attributes.name ?? "Unknown";
+//     const artist = manga.relationships.find((rel: any) => rel.type === "artist")?.attributes.name ?? "Unknown";
+
+//     const tags = attributes.tags.map((tag: any) => ({
+//       name: tag.attributes.name.en,
+//       group: tag.attributes.group,
+//     }));
+
+//     const genres = tags.filter((t: Tag) => t.attributes.group === "genre").map((t: Tag) => t.attributes.name);
+//     const themes = tags.filter((t: Tag) => t.attributes.group === "theme").map((t: Tag) => t.attributes.name);
+//     const demographic = tags.find((t: Tag) => t.attributes.group === "demographic")?.name ?? "Unknown";
+
+//     return {
+//       title,
+//       description,
+//       author,
+//       artist,
+//       genres,
+//       themes,
+//       demographic,
+//     };
+//   } catch (error){
+//     console.error("Whoops, failed to fetch details for this manga:", error);
+//     return null;
+//   }
+// }
+
+export async function fetchMangaDetails(mangaId: string): Promise<Manga>{
+  const res = await fetch(`https://api.mangadex.org/manga/${mangaId}?includes[]=author&includes[]=artist&includes[]=cover_art`);
+  
+  if(!res.ok){
+    throw new Error('Whoops! Failed to fetch manga details.');
+  }
+
+  const json = await res.json();
+  return json.data as Manga;
+}
+
+export async function fetchMangaChapters(mangaId: string): Promise<Chapter[]>{
+  const res = await fetch( `https://api.mangadex.org/chapter?manga=${mangaId}&limit=100&translatedLanguage[]=en&order[chapter]=desc&includes[]=scanlation_group&includes[]=user`);
+
+  if(!res.ok){
+    throw new Error('Whoops! Failed to fetch manga chapters.');
+  }
+
+  const json = await res.json();
+  const chapters: Chapter[] = json.data;
+
+  return chapters;
+}
 
 export async function getChapterImages(chapterId: string) {
   try {
