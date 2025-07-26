@@ -6,7 +6,7 @@ import {
   trackContentResponseSchema,
 } from "./schemas";
 import { Chapter, Manga } from "./types";
-import { fetchYTMusicDataFromTitle } from "./ytmusic";
+import { getYoutubeURLResult } from "./ytmusic";
 
 // NOTE: keep this commented here for now in case the current fetchMangaDetails breaks
 // type Tag = {
@@ -223,14 +223,21 @@ export async function getRecommendedURLs(chapterId: string) {
     })
   );
 
+  for (const song of titlesPerSegment) {
+    console.log(
+      `Song from ${song.start} to ${song.end}: Mood - ${song.moodDescription} (${song.moodCategory}), Confidence - ${song.confidence}`
+    );
+    console.log("Recommendations:", song.recommendations);
+  }
+
   const youtubeURLs = await Promise.all(
     titlesPerSegment.map((segment) => {
       const searchQuery = `${segment.recommendations[0]?.artist} - ${segment.recommendations[0]?.title}`;
-      return fetchYTMusicDataFromTitle(searchQuery);
+      return getYoutubeURLResult(searchQuery);
     })
   );
 
-  return titlesPerSegment;
+  return youtubeURLs;
 }
 
 async function createPDFFromImages(imageUrls: string[]) {
