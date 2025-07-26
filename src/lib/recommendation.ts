@@ -67,11 +67,15 @@ async function segmentationAgent(
     system: `
     Create emotionally coherent segments from manga page analysis.
     Requirements:
-    - Soft minimum of 6 pages per segment unless strong mood shift
+    - Minimum of 6 pages per segment unless strong mood shift
     - Avoid segments of only 1-3 pages
     - Clear emotional progression
     - Smooth transitions between segments
     - Consistent mood within segments
+    - Use page analysis to identify mood shifts and segment boundaries
+    - Ensure segments are meaningful for music recommendations
+    - If two segments have the same mood (i.e. melancholic and melancholic), merge them into one segment
+    - However, do not merge segments with different moods, even if they are adjacent
 
     For each segment provide:
     1. Page range (start-end)
@@ -87,7 +91,7 @@ async function segmentationAgent(
 
     Guidelines for mood categories:
     - serene: Peaceful, contemplative, or gently uplifting moments
-    - tense: Suspenseful, dramatic, or uncertain scenes
+    - tense: Suspenseful, anxious, or foreboding scenes
     - melancholic: Emotional, sad, or reflective passages
     - action: Combat, chase scenes, or high-stakes sequences
     - romantic: Love scenes, tender moments, emotional connections

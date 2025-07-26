@@ -13,7 +13,7 @@ export interface Tag {
 //cover art is optional
 export interface Relationship {
   id: string;
-  type: 'author' | 'artist' | 'cover_art' | string;
+  type: "author" | "artist" | "cover_art" | string;
   attributes?: {
     name?: string;
     fileName?: string;
@@ -37,27 +37,27 @@ export interface MangaAttributes {
 
 export interface Manga {
   id: string;
-  type: 'manga';
+  type: "manga";
   attributes: MangaAttributes;
   relationships: Relationship[];
 }
 
 export interface Chapter {
-  id: string
-  type: "chapter"
+  id: string;
+  type: "chapter";
   attributes: {
-    title: string
-    chapter: string
-    volume: string
-    translatedLanguage: string
-    publishAt: string
-  }
+    title: string;
+    chapter: string;
+    volume: string;
+    translatedLanguage: string;
+    publishAt: string;
+  };
   relationships: {
-    id: string
-    type: "scanlation_group" | "user"
+    id: string;
+    type: "scanlation_group" | "user";
     attributes?: {
-      name?: string
-      username?: string
-    }
-  }[]
+      name?: string;
+      username?: string;
+    };
+  }[];
 }
