@@ -29,13 +29,7 @@ export default function PageViewport({
 
   const handleClick = async () => {
     const recommended = await getRecommendedMusic(chapterId);
-
-    for (const song of recommended) {
-      console.log(
-        `Song from ${song.start} to ${song.end}: Mood - ${song.moodDescription} (${song.moodCategory}), Confidence - ${song.confidence}`
-      );
-      console.log("Recommendations:", song.recommendations);
-    }
+    console.log("Recommended music:", recommended);
   };
 
   const handleMoodSongs = async () => {
