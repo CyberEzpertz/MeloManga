@@ -21,7 +21,11 @@ export default function TestPlayer({ songsPromise }: Props) {
       <div className="mt-4">
         <p>Current Page: {page}</p>
       </div>
-      <PlayerBar currentPage={page} songsPromise={songsPromise} />
+      <PlayerBar
+        currentPage={page}
+        songsPromise={songsPromise}
+        setPage={setPage}
+      />
     </div>
   );
 }

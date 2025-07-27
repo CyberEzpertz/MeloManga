@@ -76,7 +76,11 @@ export default function PageViewport({
 
       {withMusic && (
         <Suspense fallback={<div>Loading music...</div>}>
-          <PlayerBar currentPage={page + 1} songsPromise={songsPromise} />
+          <PlayerBar
+            currentPage={page + 1}
+            songsPromise={songsPromise}
+            setPage={setPage}
+          />
         </Suspense>
       )}
 
