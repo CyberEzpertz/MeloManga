@@ -4,6 +4,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import type { Chapter, Manga } from "@/lib/types";
 import { Calendar, ChevronLeft, Eye, Music, User, Users } from "lucide-react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { use } from "react";
 
@@ -113,7 +114,7 @@ export default function MangaViewport({
                   {tags.map((tag) => (
                     <span
                       key={tag}
-                      className="border-primary text-primary-foreground bg-primary/20 rounded-full border-2 px-4 py-1 text-sm"
+                      className="border-primary text-primary bg-primary/20 rounded-full border-2 px-4 py-1 text-sm font-medium"
                     >
                       {tag}
                     </span>
@@ -168,14 +169,14 @@ export default function MangaViewport({
                           variant="outline"
                           onClick={() => handleReadWithMusic(ch.id)}
                         >
-                          <Music className="mr-2 size-4" /> Read with Music
+                          <Music className="size-4" /> Read with Music
                         </Button>
                         <Button
                           size="sm"
                           variant="outline"
                           onClick={() => handleRead(ch.id)}
                         >
-                          <Eye className="mr-2 size-4" /> Read
+                          <Eye className="size-4" /> Read
                         </Button>
                       </div>
                     </div>
@@ -187,17 +188,19 @@ export default function MangaViewport({
         </div>
       </div>
       <div className="flex flex-col items-stretch justify-center md:hidden">
-        <div className="w-full">
+        <div className="relative h-[80vh] w-full">
           {proxyUrl && (
-            <img
+            <Image
               src={proxyUrl}
               alt="Cover Art"
-              className="h-full w-full object-cover"
+              className="h-full w-full flex-1"
+              fill
+              objectFit="cover"
             />
           )}
         </div>
         <div className="bg-background z-10 -mt-8 flex w-full flex-col gap-8 rounded-t-4xl p-8 shadow-2xl">
-          <h2 className="text-3xl font-bold tracking-tight">{enTitle}</h2>
+          <h2 className="text-2xl font-bold tracking-tight">{enTitle}</h2>
           <div>
             <h3 className="text-muted-foreground mb-2 text-sm font-semibold tracking-wide uppercase">
               About
