@@ -1,7 +1,12 @@
-import { getYoutubeURLResult } from "@/lib/ytmusic";
+import { getTestURLs } from "@/lib/ytmusic";
+import TestPlayer from "./_components/test-player";
 
 interface Props {}
 export default async function musicPage({}: Props) {
-  const data2 = await getYoutubeURLResult("Sensitive Kind - Manja Sjogren");
-  return <div></div>;
+  const data2 = getTestURLs();
+  return (
+    <div>
+      <TestPlayer songsPromise={data2} />
+    </div>
+  );
 }

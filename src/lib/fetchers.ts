@@ -1,3 +1,4 @@
+import { MusicSegment } from "@/components/player-bar";
 import { PDFDocument } from "pdf-lib";
 import { moodToSeedSongs } from "./moods";
 import { getMoodSegments } from "./recommendation";
@@ -172,7 +173,9 @@ export async function getTitleRecommendations(
   return data;
 }
 
-export async function getRecommendedURLs(chapterId: string) {
+export async function getRecommendedURLs(
+  chapterId: string
+): Promise<MusicSegment[]> {
   const imageUrls = await getChapterImages(chapterId);
 
   if (!imageUrls || imageUrls.length === 0) {
@@ -231,9 +234,26 @@ export async function getRecommendedURLs(chapterId: string) {
   }
 
   const youtubeURLs = await Promise.all(
-    titlesPerSegment.map((segment) => {
-      const searchQuery = `${segment.recommendations[0]?.artist} - ${segment.recommendations[0]?.title}`;
-      return getYoutubeURLResult(searchQuery);
+    titlesPerSegment.map(async (segment) => {
+      // Process all recommendations for the segment
+      const urls = await Promise.all(
+        segment.recommendations.map(async (rec) => {
+          try {
+            const searchQuery = `${rec.artist} - ${rec.title}`;
+            return await getYoutubeURLResult(searchQuery);
+          } catch (error) {
+            console.warn(`Failed to get YouTube URL for ${rec.title}:`, error);
+            return null;
+          }
+        })
+      ); // Filter out any null results
+
+      // Filter out failed searches and return segment info
+      return {
+        start: segment.start,
+        end: segment.end,
+        src: urls.filter((a) => a !== null)[0], // Take first successful result
+      };
     })
   );
 

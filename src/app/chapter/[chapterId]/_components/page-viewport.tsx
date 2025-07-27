@@ -1,37 +1,30 @@
 "use client";
 
 import { getRecommendedMusic } from "@/actions/recommendations";
+import PlayerBar from "@/components/player-bar";
 import { Button } from "@/components/ui/button";
+import { getRecommendedURLs } from "@/lib/fetchers";
 import { moodToSeedSongs } from "@/lib/moods";
 import { getSongsFeatures } from "@/lib/reccobeats";
 import { ChevronLeft, Settings2 } from "lucide-react";
-import { usePathname, useRouter } from "next/navigation";
-import { use, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Suspense, use, useState } from "react";
 
 interface PageViewportProps {
   chapterId: string;
   imagesPromise: Promise<string[]>;
-  // songsPromise: ReturnType<typeof getRecommendedURLs>;
+  songsPromise: ReturnType<typeof getRecommendedURLs>;
 }
 
 export default function PageViewport({
   chapterId,
   imagesPromise,
-  // songsPromise,
+  songsPromise,
 }: PageViewportProps) {
   const images = use(imagesPromise);
+
   const [page, setPage] = useState(0);
-  // const songs = use(songsPromise);
-
-  // for (const song of songs) {
-  //   console.log(
-  //     `Song from ${song.start} to ${song.end}: Mood - ${song.mood}, Confidence - ${song.confidence}`
-  //   );
-  //   console.log(`Recommendations: ${song.recommendations.join(", ")}`);
-  // }
-
   const router = useRouter();
-  const pathname = usePathname();
 
   const handleClick = async () => {
     const recommended = await getRecommendedMusic(chapterId);
@@ -92,6 +85,10 @@ export default function PageViewport({
         </div>
       </div>
       {images.length === 0 && <p>No images found.</p>}
+
+      <Suspense fallback={<div>Loading music...</div>}>
+        <PlayerBar currentPage={page} songsPromise={songsPromise} />
+      </Suspense>
     </div>
   );
 }
