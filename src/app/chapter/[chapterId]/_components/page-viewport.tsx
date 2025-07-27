@@ -1,6 +1,5 @@
 "use client";
 
-import { getRecommendedMusic } from "@/actions/recommendations";
 import PlayerBar from "@/components/player-bar";
 import { Button } from "@/components/ui/button";
 import { getRecommendedURLs } from "@/lib/fetchers";
@@ -23,11 +22,6 @@ export default function PageViewport({
 
   const [page, setPage] = useState(0);
   const router = useRouter();
-
-  const handleClick = async () => {
-    const recommended = await getRecommendedMusic(chapterId);
-    console.log("Recommended music:", recommended);
-  };
 
   const handleBack = () => {
     router.back();
