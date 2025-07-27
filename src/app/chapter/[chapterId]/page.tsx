@@ -3,6 +3,7 @@
 import { getChapterImages, getRecommendedURLs } from "@/lib/fetchers";
 import { Suspense } from "react";
 import PageViewport from "./_components/page-viewport";
+import PageViewportSkeleton from "./_components/page-viewport-skeleton";
 
 export default async function ChapterIdPage({
   params,
@@ -20,7 +21,7 @@ export default async function ChapterIdPage({
     : Promise.resolve([]);
 
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<PageViewportSkeleton />}>
       <PageViewport
         imagesPromise={imagesPromise}
         songsPromise={songsPromise}

@@ -2,14 +2,14 @@
 
 import { use, useEffect, useRef, useState } from "react";
 
-import { Pause, Play, Volume1, Volume2, VolumeOff } from "lucide-react";
+import { Pause, Play } from "lucide-react";
 import ReactPlayer from "react-player";
 
 import { getRecommendedURLs } from "@/lib/fetchers";
 import { cn } from "@/lib/utils";
 import { QueueSheet } from "./queue-sheet";
 import { Button } from "./ui/button";
-import { Slider } from "./ui/slider";
+import VolumeControl from "./volume-control";
 
 export interface MusicSegment {
   src: string;
@@ -177,56 +177,41 @@ export default function PlayerBar({
 
           <div className="ml-auto inline-flex flex-shrink-0 items-center gap-4">
             {/* Volume Control */}
-            <div className="inline-flex items-center gap-2">
-              {manualVolume < 0.5 ? (
-                manualVolume <= 0 ? (
-                  <VolumeOff className="text-muted-foreground size-4" />
-                ) : (
-                  <Volume1 className="text-muted-foreground size-4" />
-                )
+            <Button
+              className="rounded-full"
+              variant="default"
+              size="icon"
+              onClick={onPlayButtonClick}
+            >
+              {playing ? (
+                <Pause
+                  className="text-primary-foreground h-5 w-5"
+                  fill="currentColor"
+                />
               ) : (
-                <Volume2 className="text-muted-foreground size-4" />
+                <Play
+                  className="text-primary-foreground h-5 w-5"
+                  fill="currentColor"
+                />
               )}
-              <Slider
-                max={1}
-                step={0.01}
-                value={[currentTrack.volume]}
-                onValueChange={(value) => {
-                  if (!isCrossfading) {
-                    setCurrentTrack((prev) => ({ ...prev, volume: value[0] }));
-                    setManualVolume(value[0]);
-                  }
-                }}
-                className="w-48"
-                disabled={isCrossfading}
-              />
-            </div>
+            </Button>
+            <VolumeControl
+              volume={manualVolume}
+              onVolumeChange={(value) => {
+                if (!isCrossfading) {
+                  setCurrentTrack((prev) => ({ ...prev, volume: value }));
+                  setManualVolume(value);
+                }
+              }}
+              disabled={isCrossfading}
+            />
             {/* Controls */}
-            <div className="flex gap-2">
-              <Button
-                className="rounded-full"
-                variant="default"
-                size="icon"
-                onClick={onPlayButtonClick}
-              >
-                {playing ? (
-                  <Pause
-                    className="text-primary-foreground h-5 w-5"
-                    fill="currentColor"
-                  />
-                ) : (
-                  <Play
-                    className="text-primary-foreground h-5 w-5"
-                    fill="currentColor"
-                  />
-                )}
-              </Button>
-              <QueueSheet
-                songs={sources}
-                currentSong={currentTrack.src}
-                setPage={setPage}
-              />
-            </div>
+
+            <QueueSheet
+              songs={sources}
+              currentSong={currentTrack.src}
+              setPage={setPage}
+            />
           </div>
         </div>
       </div>

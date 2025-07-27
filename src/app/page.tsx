@@ -1,4 +1,5 @@
 import MangaList from "@/components/manga-list";
+import MangaListSkeleton from "@/components/manga-list-skeleton";
 import { fetchMangaDetails } from "@/lib/fetchers";
 import { Suspense } from "react";
 
@@ -21,7 +22,7 @@ export default function Home() {
 
   return (
     <div>
-      <Suspense fallback={<div>Loading manga...</div>}>
+      <Suspense fallback={<MangaListSkeleton />}>
         <MangaList mangaListPromise={mangaPromise} />
       </Suspense>
     </div>

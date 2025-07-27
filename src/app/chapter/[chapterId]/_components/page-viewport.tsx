@@ -1,6 +1,7 @@
 "use client";
 
 import PlayerBar from "@/components/player-bar";
+import PlayerBarSkeleton from "@/components/player-bar-skeleton";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { getRecommendedURLs } from "@/lib/fetchers";
@@ -75,7 +76,7 @@ export default function PageViewport({
       {images.length === 0 && <p>No images found.</p>}
 
       {withMusic && (
-        <Suspense fallback={<div>Loading music...</div>}>
+        <Suspense fallback={<PlayerBarSkeleton />}>
           <PlayerBar
             currentPage={page + 1}
             songsPromise={songsPromise}
