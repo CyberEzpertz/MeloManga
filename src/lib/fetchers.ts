@@ -167,7 +167,10 @@ export async function getTitleRecommendations(
     href: item.href,
     title: item.trackTitle,
     id: item.id,
-    artist: item.artists.join(", "),
+    artist: item.artists
+      .map((a) => a.name)
+      .slice(0, 2)
+      .join(", "),
   }));
 
   return data;

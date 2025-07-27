@@ -92,7 +92,7 @@ export default function PageViewport({
       {images.length === 0 && <p>No images found.</p>}
 
       <Suspense fallback={<div>Loading music...</div>}>
-        <PlayerBar currentPage={page} songsPromise={songsPromise} />
+        <PlayerBar currentPage={page + 1} songsPromise={songsPromise} />
       </Suspense>
     </div>
   );

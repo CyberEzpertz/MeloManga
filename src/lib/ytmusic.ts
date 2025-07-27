@@ -2,9 +2,19 @@ import { MusicSegment } from "@/components/player-bar";
 import YouTube from "youtube-sr";
 
 export async function getYoutubeURLResult(query: string) {
+  console.log("Searching YouTube for:", query);
+
   const videos = await YouTube.search(query, {
-    limit: 1,
+    limit: 3,
     type: "video",
+  });
+
+  console.log("YouTube search results:");
+  videos.forEach((video) => {
+    console.log(`Title: ${video.title}
+      URL: ${video.url}
+      Artist: ${video.channel?.name}
+    `);
   });
 
   return videos[0].url;
