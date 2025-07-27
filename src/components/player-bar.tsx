@@ -7,7 +7,9 @@ import ReactPlayer from "react-player";
 
 import { getRecommendedURLs } from "@/lib/fetchers";
 import { cn } from "@/lib/utils";
+import { QueueSheet } from "./queue-sheet";
 import { Button } from "./ui/button";
+import VolumeControl from "./volume-control";
 
 export interface MusicSegment {
   src: string;
@@ -21,9 +23,14 @@ export interface MusicSegment {
 interface PlayerProps {
   currentPage: number;
   songsPromise: ReturnType<typeof getRecommendedURLs>;
+  setPage: (page: number) => void;
 }
 
-export default function PlayerBar({ currentPage, songsPromise }: PlayerProps) {
+export default function PlayerBar({
+  currentPage,
+  songsPromise,
+  setPage,
+}: PlayerProps) {
   const sources = use(songsPromise);
   const [playing, setPlaying] = useState(false);
   const [currentTrack, setCurrentTrack] = useState<{
@@ -41,9 +48,10 @@ export default function PlayerBar({ currentPage, songsPromise }: PlayerProps) {
   });
   const [nextSrc, setNextSrc] = useState<string | null>(null);
   const [isCrossfading, setIsCrossfading] = useState(false);
+  const [manualVolume, setManualVolume] = useState<number>(1);
 
   const fadeOutDuration = 3000;
-  const fadeInDuration = 3000;
+  const fadeInDuration = 5000;
   const delayDuration = 1000;
   const animationRef = useRef<number | null>(null);
   const startTimeRef = useRef<number | null>(null);
@@ -66,13 +74,13 @@ export default function PlayerBar({ currentPage, songsPromise }: PlayerProps) {
 
       if (fadePhaseRef.current === "out") {
         // Fade out current track
-        const progress = Math.min(elapsed / fadeOutDuration, 1);
+        const progress = Math.min(elapsed / fadeOutDuration, manualVolume);
         setCurrentTrack((prev) => ({
           ...prev,
-          volume: Math.max(0, 1 - progress),
+          volume: Math.max(0, manualVolume - progress),
         }));
 
-        if (progress >= 1) {
+        if (progress >= manualVolume) {
           // Switch to delay phase
           fadePhaseRef.current = "delay";
           startTimeRef.current = currentTime;
@@ -92,13 +100,13 @@ export default function PlayerBar({ currentPage, songsPromise }: PlayerProps) {
         }
       } else {
         // Fade in phase (6 second duration)
-        const progress = Math.min(elapsed / fadeInDuration, 1);
+        const progress = Math.min(elapsed / fadeInDuration, manualVolume);
         setCurrentTrack((prev) => ({
           ...prev,
-          volume: Math.min(1, progress),
+          volume: Math.min(manualVolume, progress),
         }));
 
-        if (progress >= 1) {
+        if (progress >= manualVolume) {
           setIsCrossfading(false);
           setNextSrc(null);
           animationRef.current = null;
@@ -144,7 +152,7 @@ export default function PlayerBar({ currentPage, songsPromise }: PlayerProps) {
       <div className="fixed inset-x-0 bottom-3 mx-auto">
         <div
           className={cn(
-            "m-4 flex flex-row items-center justify-between rounded-xl bg-zinc-800 p-4",
+            "bg-card border-border m-4 flex flex-row items-center justify-between rounded-xl border p-4 shadow-lg",
             isCrossfading && fadePhaseRef.current === "out" && "animate-pulse"
           )}
         >
@@ -158,28 +166,53 @@ export default function PlayerBar({ currentPage, songsPromise }: PlayerProps) {
           </div>
 
           {/* Title and Artist */}
-          <div className="mx-4 flex flex-grow flex-col">
-            <span className="text-sm font-medium text-white">
+          <div className="mx-4 flex flex-1 flex-col leading-none">
+            <span className="text-foreground line-clamp-1 text-sm font-medium">
               {currentTrack.title || "Unknown Title"}
             </span>
-            <span className="text-xs text-zinc-400">
+            <span className="text-muted-foreground text-xs">
               {currentTrack.artist || "Unknown Artist"}
             </span>
           </div>
 
-          {/* Play/Pause Button */}
-          <Button
-            className="ml-auto flex-shrink-0"
-            variant="ghost"
-            size="icon"
-            onClick={onPlayButtonClick}
-          >
-            {playing ? (
-              <Pause className="h-5 w-5 text-white" fill="#FFF" />
-            ) : (
-              <Play className="h-5 w-5 text-white" fill="#FFF" />
-            )}
-          </Button>
+          <div className="ml-auto inline-flex flex-shrink-0 items-center gap-4">
+            {/* Volume Control */}
+            <Button
+              className="rounded-full"
+              variant="default"
+              size="icon"
+              onClick={onPlayButtonClick}
+            >
+              {playing ? (
+                <Pause
+                  className="text-primary-foreground h-5 w-5"
+                  fill="currentColor"
+                />
+              ) : (
+                <Play
+                  className="text-primary-foreground h-5 w-5"
+                  fill="currentColor"
+                />
+              )}
+            </Button>
+            <VolumeControl
+              volume={manualVolume}
+              onVolumeChange={(value) => {
+                if (!isCrossfading) {
+                  setCurrentTrack((prev) => ({ ...prev, volume: value }));
+                  setManualVolume(value);
+                }
+              }}
+              disabled={isCrossfading}
+            />
+            {/* Controls */}
+
+            <QueueSheet
+              songs={sources}
+              currentSong={currentTrack.src}
+              setPage={setPage}
+            />
+          </div>
         </div>
       </div>
     </div>

@@ -95,7 +95,7 @@ async function segmentationAgent(
     - melancholic: Emotional, sad, or reflective passages
     - action: Combat, chase scenes, or high-stakes sequences
     - romantic: Love scenes, tender moments, emotional connections
-    - whimsical: Comedic, lighthearted, or playful sequences
+    - whimsical: Joyful, positive, fun, comedic, lighthearted, or playful sequences
 
     Choose the moodCategory that best fits the segment's overall tone, using moodDescription for nuanced emotional context.`,
     messages: [

@@ -3,23 +3,29 @@
 import { getChapterImages, getRecommendedURLs } from "@/lib/fetchers";
 import { Suspense } from "react";
 import PageViewport from "./_components/page-viewport";
+import PageViewportSkeleton from "./_components/page-viewport-skeleton";
 
 export default async function ChapterIdPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ chapterId: string }>;
+  searchParams: Promise<{ [key: string]: string }>;
 }) {
   const { chapterId } = await params;
+  const withMusic = (await searchParams)["music"] === "true";
 
   const imagesPromise = getChapterImages(chapterId);
-  const songsPromise = getRecommendedURLs(chapterId);
+  const songsPromise = withMusic
+    ? getRecommendedURLs(chapterId)
+    : Promise.resolve([]);
 
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<PageViewportSkeleton />}>
       <PageViewport
-        chapterId={chapterId}
         imagesPromise={imagesPromise}
         songsPromise={songsPromise}
+        withMusic={withMusic}
       />
     </Suspense>
   );

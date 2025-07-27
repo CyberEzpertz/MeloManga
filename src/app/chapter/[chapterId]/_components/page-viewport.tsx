@@ -1,21 +1,22 @@
 "use client";
 
-import { getRecommendedMusic } from "@/actions/recommendations";
 import PlayerBar from "@/components/player-bar";
+import PlayerBarSkeleton from "@/components/player-bar-skeleton";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { getRecommendedURLs } from "@/lib/fetchers";
-import { ChevronLeft, Settings2 } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Suspense, use, useState } from "react";
 
 interface PageViewportProps {
-  chapterId: string;
+  withMusic: boolean;
   imagesPromise: Promise<string[]>;
   songsPromise: ReturnType<typeof getRecommendedURLs>;
 }
 
 export default function PageViewport({
-  chapterId,
+  withMusic,
   imagesPromise,
   songsPromise,
 }: PageViewportProps) {
@@ -23,11 +24,6 @@ export default function PageViewport({
 
   const [page, setPage] = useState(0);
   const router = useRouter();
-
-  const handleClick = async () => {
-    const recommended = await getRecommendedMusic(chapterId);
-    console.log("Recommended music:", recommended);
-  };
 
   const handleBack = () => {
     router.back();
@@ -45,7 +41,7 @@ export default function PageViewport({
 
   return (
     <div className="flex h-screen max-h-screen w-full flex-col items-center">
-      <div className="flex w-full flex-row items-center justify-between p-4">
+      <div className="border-border flex w-full flex-row items-center justify-between border-b px-4 py-2">
         <Button
           className="rounded-full"
           size="icon"
@@ -57,9 +53,7 @@ export default function PageViewport({
         <h1 className="font-semibold">
           {page + 1} / {images.length}
         </h1>
-        <Button className="rounded-full" size="icon" variant="ghost">
-          <Settings2 className="size-4" />
-        </Button>
+        <ThemeToggle />
       </div>
       <div className="relative flex min-h-0 flex-1 self-stretch">
         {/* Tap Zones */}
@@ -81,9 +75,15 @@ export default function PageViewport({
       </div>
       {images.length === 0 && <p>No images found.</p>}
 
-      <Suspense fallback={<div>Loading music...</div>}>
-        <PlayerBar currentPage={page + 1} songsPromise={songsPromise} />
-      </Suspense>
+      {withMusic && (
+        <Suspense fallback={<PlayerBarSkeleton />}>
+          <PlayerBar
+            currentPage={page + 1}
+            songsPromise={songsPromise}
+            setPage={setPage}
+          />
+        </Suspense>
+      )}
 
       {/* Progress Bar */}
       <div className="fixed right-0 bottom-0 left-0 h-1.5 bg-zinc-200">
