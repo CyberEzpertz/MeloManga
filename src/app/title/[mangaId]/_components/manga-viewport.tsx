@@ -1,8 +1,9 @@
 "use client";
 
+import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import type { Chapter, Manga } from "@/lib/types";
-import { Calendar, ChevronLeft, Eye, Music, Users } from "lucide-react";
+import { Calendar, ChevronLeft, Eye, Music, User, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { use } from "react";
 
@@ -62,7 +63,7 @@ export default function MangaViewport({
 
   return (
     <div>
-      <div className="md :p-4 flex w-full flex-row items-center justify-between p-2">
+      <div className="border-border flex w-full flex-row items-center justify-between border-b px-4 py-2">
         <Button
           className="rounded-full"
           size="icon"
@@ -71,6 +72,7 @@ export default function MangaViewport({
         >
           <ChevronLeft className="size-4 text-blue-500" />
         </Button>
+        <ThemeToggle />
       </div>
       <div className="hidden flex-col p-6 md:flex">
         <div className="flex flex-col gap-8">
@@ -210,7 +212,7 @@ export default function MangaViewport({
               {tags.map((tag) => (
                 <span
                   key={tag}
-                  className="border-primary text-primary-foreground bg-primary/20 rounded-full border-2 px-4 py-1 text-sm"
+                  className="border-primary text-primary bg-primary/20 rounded-full border-2 px-4 py-1 text-sm font-medium"
                 >
                   {tag}
                 </span>
@@ -223,15 +225,12 @@ export default function MangaViewport({
             </h3>
             <div className="flex flex-wrap gap-2">
               {chapters.map((ch) => {
-                const group =
-                  ch.relationships.find((r) => r.type === "scanlation_group")
-                    ?.attributes?.name ?? "Unknown Group";
                 const user =
                   ch.relationships.find((r) => r.type === "user")?.attributes
                     ?.username ?? "Unknown Uploader";
                 return (
                   <div
-                    className="flex w-full flex-row justify-between"
+                    className="border-border flex w-full flex-row justify-between border-t py-4"
                     key={ch.id}
                   >
                     <div className="flex flex-col gap-2">
@@ -247,7 +246,8 @@ export default function MangaViewport({
                           ).toLocaleDateString()}
                         </span>
                         <span className="text-muted-foreground inline-flex items-center gap-2 italic">
-                          <Users className="size-4" />[{group} / {user}]
+                          <User className="size-4" />
+                          {user}
                         </span>
                       </div>
                     </div>

@@ -6,20 +6,25 @@ import PageViewport from "./_components/page-viewport";
 
 export default async function ChapterIdPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ chapterId: string }>;
+  searchParams: Promise<{ [key: string]: string }>;
 }) {
   const { chapterId } = await params;
+  const withMusic = (await searchParams)["music"] === "true";
 
   const imagesPromise = getChapterImages(chapterId);
-  const songsPromise = getRecommendedURLs(chapterId);
+  const songsPromise = withMusic
+    ? getRecommendedURLs(chapterId)
+    : Promise.resolve([]);
 
   return (
     <Suspense fallback={<div>Loading...</div>}>
       <PageViewport
-        chapterId={chapterId}
         imagesPromise={imagesPromise}
         songsPromise={songsPromise}
+        withMusic={withMusic}
       />
     </Suspense>
   );
