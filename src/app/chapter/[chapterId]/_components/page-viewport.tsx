@@ -4,7 +4,9 @@ import { getRecommendedMusic } from "@/actions/recommendations";
 import { Button } from "@/components/ui/button";
 import { moodToSeedSongs } from "@/lib/moods";
 import { getSongsFeatures } from "@/lib/reccobeats";
-import { use } from "react";
+import { ChevronLeft, Settings2 } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { use, useState } from "react";
 
 interface PageViewportProps {
   chapterId: string;
@@ -18,6 +20,7 @@ export default function PageViewport({
   // songsPromise,
 }: PageViewportProps) {
   const images = use(imagesPromise);
+  const [page, setPage] = useState(0);
   // const songs = use(songsPromise);
 
   // for (const song of songs) {
@@ -27,9 +30,16 @@ export default function PageViewport({
   //   console.log(`Recommendations: ${song.recommendations.join(", ")}`);
   // }
 
+  const router = useRouter();
+  const pathname = usePathname();
+
   const handleClick = async () => {
     const recommended = await getRecommendedMusic(chapterId);
     console.log("Recommended music:", recommended);
+  };
+
+  const handleBack = () => {
+    router.back();
   };
 
   const handleMoodSongs = async () => {
@@ -40,16 +50,45 @@ export default function PageViewport({
     });
   };
 
+  const handlePage = (direction: "next" | "prev") => {
+    if (direction === "next" && page < images.length - 1) {
+      setPage((prev) => prev + 1);
+    } else if (direction === "prev" && page > 0) {
+      setPage((prev) => prev - 1);
+    }
+  };
+
+  const url = images[page] || "";
+
   return (
-    <div className="flex w-screen flex-col items-center p-4">
-      <h1 className="text-2xl font-semibold">Chapter: {chapterId}</h1>
-      <Button onClick={handleClick}>Generate Music</Button>
-      <Button onClick={handleMoodSongs}>Get Mood Songs</Button>
-      <div className="mx-auto mt-2 flex flex-col gap-4">
-        <div className="max-w-xl">
-          {images.map((url, i) => (
-            <img key={i} src={url} alt={`Page ${i + 1}`} className="w-full" />
-          ))}
+    <div className="flex h-screen max-h-screen w-full flex-col items-center">
+      <div className="flex w-full flex-row items-center justify-between p-4">
+        <Button className="rounded-full" size="icon" variant="ghost">
+          <ChevronLeft className="size-4" />
+        </Button>
+        <h1 className="font-semibold">
+          {page + 1} / {images.length}
+        </h1>
+        <Button className="rounded-full" size="icon" variant="ghost">
+          <Settings2 className="size-4" />
+        </Button>
+      </div>
+      <div className="relative flex min-h-0 flex-1 self-stretch">
+        {/* Tap Zones */}
+        <div className="absolute flex h-full w-full flex-row">
+          <div
+            className="h-full w-2/5 cursor-pointer"
+            onClick={() => handlePage("prev")}
+          />
+          <div
+            className="ml-auto h-full w-2/5 cursor-pointer"
+            onClick={() => handlePage("next")}
+          />
+        </div>
+
+        {/* Image */}
+        <div className="mx-auto my-auto flex max-h-full min-h-0">
+          <img src={url} alt={`Page ${page}`} className="object-contain" />
         </div>
       </div>
       {images.length === 0 && <p>No images found.</p>}
