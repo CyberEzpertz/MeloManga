@@ -1,5 +1,6 @@
 "use client";
 import { Manga } from "@/lib/types";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 
 interface MangaCardProps {
@@ -26,11 +27,18 @@ export default function MangaCard({ manga }: MangaCardProps) {
       className="border-border bg-card flex max-h-[450px] min-h-[400px] cursor-pointer flex-col overflow-hidden rounded-xl border drop-shadow-xl transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg"
       onClick={onClick}
     >
-      <div className="min-h-0 flex-1">
-        <img
+      <div className="relative min-h-0 flex-1">
+        <Image
           src={proxyUrl!}
           alt={manga.attributes.title["en"]}
-          className="h-full w-full object-cover"
+          fill
+          objectFit="cover"
+          data-loaded="false"
+          onLoad={(event) => {
+            event.currentTarget.setAttribute("data-loaded", "true");
+          }}
+          className="h-full w-full data-[loaded=false]:animate-pulse data-[loaded=false]:bg-gray-100/50"
+          decoding="async"
         />
       </div>
 

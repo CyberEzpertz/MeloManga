@@ -80,13 +80,21 @@ export default function MangaViewport({
       <div className="hidden flex-col p-6 md:flex">
         <div className="flex flex-col gap-8">
           <div className="flex gap-8">
-            {proxyUrl && (
-              <img
-                src={proxyUrl}
-                alt="Cover Art"
-                className="h-auto w-64 rounded-xl object-cover shadow-lg"
-              />
-            )}
+            <div className="relative h-auto w-64 shrink-0 overflow-hidden rounded-xl shadow-lg">
+              {proxyUrl && (
+                <Image
+                  src={proxyUrl}
+                  alt="Cover Art"
+                  fill
+                  objectFit="cover"
+                  data-loaded="false"
+                  onLoad={(event) => {
+                    event.currentTarget.setAttribute("data-loaded", "true");
+                  }}
+                  className="h-full w-full flex-1 data-[loaded=false]:animate-pulse data-[loaded=false]:bg-gray-100/20"
+                />
+              )}
+            </div>
             <div className="flex flex-col gap-6">
               <h1 className="text-4xl font-bold tracking-tight">{enTitle}</h1>
               <div>
@@ -193,9 +201,13 @@ export default function MangaViewport({
             <Image
               src={proxyUrl}
               alt="Cover Art"
-              className="h-full w-full flex-1"
               fill
               objectFit="cover"
+              data-loaded="false"
+              onLoad={(event) => {
+                event.currentTarget.setAttribute("data-loaded", "true");
+              }}
+              className="h-full w-full flex-1 data-[loaded=false]:animate-pulse data-[loaded=false]:bg-gray-100/20"
             />
           )}
         </div>
