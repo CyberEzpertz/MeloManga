@@ -68,7 +68,7 @@ async function segmentationAgent(
     Create emotionally coherent segments from manga page analysis.
     Requirements:
     - Minimum of 6 pages per segment unless strong mood shift
-    - Avoid segments of only 1-3 pages
+    - Absolutely no segments consisting of less than 3 pages
     - Clear emotional progression
     - Smooth transitions between segments
     - Consistent mood within segments

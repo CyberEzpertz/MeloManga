@@ -1,71 +1,112 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { use, useEffect, useRef, useState } from "react";
 
 import { Pause, Play } from "lucide-react";
 import ReactPlayer from "react-player";
 
+import { getRecommendedURLs } from "@/lib/fetchers";
+import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
 
-interface MusicSegments {
+export interface MusicSegment {
   src: string;
   start: number;
+  end: number;
+  title?: string;
+  thumbnailUrl?: string;
+  artist?: string;
 }
 
 interface PlayerProps {
   currentPage: number;
-  sources: MusicSegments[];
+  songsPromise: ReturnType<typeof getRecommendedURLs>;
 }
 
-export default function PlayerBar({ sources, currentPage }: PlayerProps) {
+export default function PlayerBar({ currentPage, songsPromise }: PlayerProps) {
+  const sources = use(songsPromise);
   const [playing, setPlaying] = useState(false);
   const [currentTrack, setCurrentTrack] = useState<{
-    src: string;
+    src: string | null;
     volume: number;
+    title?: string;
+    artist?: string;
+    thumbnailUrl?: string;
   }>({
-    src: sources[0]?.src || "",
+    src: sources[0]?.src || null,
     volume: 1,
+    title: sources[0]?.title,
+    artist: sources[0]?.artist,
+    thumbnailUrl: sources[0]?.thumbnailUrl,
   });
-  const [nextTrack, setNextTrack] = useState<{ src: string; volume: number }>({
-    src: "",
-    volume: 0,
-  });
-  const crossfadeDuration = 3000; // Duration of crossfade in milliseconds
+  const [nextSrc, setNextSrc] = useState<string | null>(null);
+  const [isCrossfading, setIsCrossfading] = useState(false);
+
+  const fadeOutDuration = 3000;
+  const fadeInDuration = 3000;
+  const delayDuration = 1000;
   const animationRef = useRef<number | null>(null);
   const startTimeRef = useRef<number | null>(null);
+  const fadePhaseRef = useRef<"out" | "delay" | "in">("out");
 
   const startCrossfade = (newSrc: string) => {
     if (animationRef.current) {
       cancelAnimationFrame(animationRef.current);
     }
 
-    // Start with current track at full volume and new track at zero
-    setNextTrack({ src: newSrc, volume: 0 });
+    setNextSrc(newSrc);
     startTimeRef.current = performance.now();
+    fadePhaseRef.current = "out";
+    setIsCrossfading(true);
 
     const fade = (currentTime: DOMHighResTimeStamp) => {
       if (!startTimeRef.current) return;
 
       const elapsed = currentTime - startTimeRef.current;
-      const progress = Math.min(elapsed / crossfadeDuration, 1);
 
-      // Fade out current track while fading in next track
-      setCurrentTrack((prev) => ({ ...prev, volume: 1 - progress }));
-      setNextTrack((prev) => ({ ...prev, volume: progress }));
+      if (fadePhaseRef.current === "out") {
+        // Fade out current track
+        const progress = Math.min(elapsed / fadeOutDuration, 1);
+        setCurrentTrack((prev) => ({
+          ...prev,
+          volume: Math.max(0, 1 - progress),
+        }));
 
-      if (progress < 1) {
-        animationRef.current = requestAnimationFrame(fade);
+        if (progress >= 1) {
+          // Switch to delay phase
+          fadePhaseRef.current = "delay";
+          startTimeRef.current = currentTime;
+          setCurrentTrack({
+            src: newSrc,
+            volume: 0,
+            title: sources.find((s) => s.src === newSrc)?.title,
+            artist: sources.find((s) => s.src === newSrc)?.artist,
+            thumbnailUrl: sources.find((s) => s.src === newSrc)?.thumbnailUrl,
+          });
+        }
+      } else if (fadePhaseRef.current === "delay") {
+        if (elapsed >= delayDuration) {
+          // Switch to fade in phase
+          fadePhaseRef.current = "in";
+          startTimeRef.current = currentTime;
+        }
       } else {
-        // Crossfade complete - make next track the current track
-        setCurrentTrack({
-          src: newSrc,
-          volume: 1,
-        });
-        setNextTrack({
-          src: "",
-          volume: 0,
-        });
+        // Fade in phase (6 second duration)
+        const progress = Math.min(elapsed / fadeInDuration, 1);
+        setCurrentTrack((prev) => ({
+          ...prev,
+          volume: Math.min(1, progress),
+        }));
+
+        if (progress >= 1) {
+          setIsCrossfading(false);
+          setNextSrc(null);
+          animationRef.current = null;
+          return;
+        }
       }
+
+      animationRef.current = requestAnimationFrame(fade);
     };
 
     animationRef.current = requestAnimationFrame(fade);
@@ -77,39 +118,66 @@ export default function PlayerBar({ sources, currentPage }: PlayerProps) {
 
   // Effect to handle track changes based on page number
   useEffect(() => {
-    const currentSource = sources.find((s) => currentPage >= s.start);
-    if (currentSource && currentSource.src !== currentTrack.src) {
+    const currentSource = sources.find(
+      (s) => currentPage >= s.start && currentPage <= s.end
+    );
+    if (
+      currentSource &&
+      currentSource.src !== currentTrack.src &&
+      currentSource.src !== nextSrc &&
+      !isCrossfading
+    ) {
+      console.log("Changing track to:", currentSource.src);
       startCrossfade(currentSource.src);
     }
-  }, [currentPage, sources, currentTrack.src]);
+  }, [currentPage, sources, currentTrack.src, nextSrc, isCrossfading]);
 
   return (
-    <div className="relative">
-      {/* Current track player */}
+    <div className="relative h-28 w-full">
       <ReactPlayer
-        src={currentTrack.src}
+        src={currentTrack.src || undefined}
         style={{ display: "none" }}
         playing={playing}
         volume={currentTrack.volume}
-        muted={false}
+        controls={true}
       />
-      {/* Next track player for crossfade */}
-      {nextTrack.src && (
-        <ReactPlayer
-          src={nextTrack.src}
-          style={{ display: "none" }}
-          playing={playing}
-          volume={nextTrack.volume}
-          muted={false}
-        />
-      )}
-      <div className="fixed inset-x-0 mx-auto">
-        <div className="m-4 flex flex-row rounded-xl bg-zinc-800 p-4">
-          <Button className="h-8 w-8 p-1" asChild onClick={onPlayButtonClick}>
+      <div className="fixed inset-x-0 bottom-3 mx-auto">
+        <div
+          className={cn(
+            "m-4 flex flex-row items-center justify-between rounded-xl bg-zinc-800 p-4",
+            isCrossfading && fadePhaseRef.current === "out" && "animate-pulse"
+          )}
+        >
+          {/* Thumbnail */}
+          <div className="size-8 flex-shrink-0 overflow-hidden rounded-md">
+            <img
+              src={currentTrack.thumbnailUrl || "/placeholder.png"}
+              alt={currentTrack.title || "Music"}
+              className="h-full w-full object-cover"
+            />
+          </div>
+
+          {/* Title and Artist */}
+          <div className="mx-4 flex flex-grow flex-col">
+            <span className="text-sm font-medium text-white">
+              {currentTrack.title || "Unknown Title"}
+            </span>
+            <span className="text-xs text-zinc-400">
+              {currentTrack.artist || "Unknown Artist"}
+            </span>
+          </div>
+
+          {/* Play/Pause Button */}
+          <Button
+            className="ml-auto flex-shrink-0"
+            variant="ghost"
+            size="icon"
+            onClick={onPlayButtonClick}
+          >
             {playing ? (
-              <Pause fill="#EAF2FF" stroke="#EAF2FF" />
+              <Pause className="h-5 w-5 text-white" fill="#FFF" />
             ) : (
-              <Play fill="#EAF2FF" stroke="#EAF2FF" />
+              <Play className="h-5 w-5 text-white" fill="#FFF" />
             )}
           </Button>
         </div>
