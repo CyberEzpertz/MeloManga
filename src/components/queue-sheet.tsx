@@ -46,7 +46,7 @@ export function QueueSheet({ songs, currentSong, setPage }: QueueSheetProps) {
                   : "border-border"
               }`}
               onClick={() => {
-                setPage(song.start);
+                setPage(song.start - 1); // Adjust page to zero-based index
                 setOpen(false);
               }}
             >
