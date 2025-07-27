@@ -56,8 +56,13 @@ export default function PageViewport({
   return (
     <div className="flex h-screen max-h-screen w-full flex-col items-center">
       <div className="flex w-full flex-row items-center justify-between p-4">
-        <Button className="rounded-full" size="icon" variant="ghost">
-          <ChevronLeft className="size-4" />
+        <Button
+          className="rounded-full"
+          size="icon"
+          variant="ghost"
+          onClick={handleBack}
+        >
+          <ChevronLeft className="size-4 text-blue-500" />
         </Button>
         <h1 className="font-semibold">
           {page + 1} / {images.length}

@@ -120,17 +120,15 @@ export default function PlayerBar({ currentPage, songsPromise }: PlayerProps) {
   }, [currentPage, sources, currentTrack.src, nextSrc, isCrossfading]);
 
   return (
-    <div className="relative">
-      <code>
-        {JSON.stringify({ current: currentTrack, next: nextSrc })} {playing}
-      </code>
+    <div className="relative h-32 w-full">
       <ReactPlayer
         src={currentTrack.src || undefined}
+        style={{ display: "none" }}
         playing={playing}
         volume={currentTrack.volume}
         controls={true}
       />
-      <div className="fixed inset-x-0 mx-auto">
+      <div className="fixed inset-x-0 mx-auto h-32">
         <div className="m-4 flex flex-row rounded-xl bg-zinc-800 p-4">
           <Button className="h-8 w-8 p-1" asChild onClick={onPlayButtonClick}>
             {playing ? (
