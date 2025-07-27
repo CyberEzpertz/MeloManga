@@ -17,7 +17,7 @@ export default function MangaList({ mangaListPromise }: MangaListProps) {
         <span className="font-bold">Your Library</span>
         <ThemeToggle />
       </div>
-      <div className="flex flex-1 flex-row flex-wrap gap-4 p-4">
+      <div className="grid flex-1 grid-cols-2 gap-4 overflow-y-auto p-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
         {mangaList.map((manga) => (
           <MangaCard key={manga.id} manga={manga} />
         ))}

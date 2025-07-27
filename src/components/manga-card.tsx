@@ -21,7 +21,7 @@ export default function MangaCard({ manga }: MangaCardProps) {
 
   return (
     <div
-      className="border-border bg-card flex max-h-[450px] cursor-pointer flex-col overflow-hidden rounded-xl border drop-shadow-xl transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg"
+      className="border-border bg-card flex max-h-[450px] min-h-[400px] cursor-pointer flex-col overflow-hidden rounded-xl border drop-shadow-xl transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg"
       onClick={onClick}
     >
       <div className="min-h-0 flex-1">
@@ -33,7 +33,7 @@ export default function MangaCard({ manga }: MangaCardProps) {
       </div>
 
       <div className="shrink-0 p-4">
-        <h3 className="font-bold">{manga.attributes.title["en"]}</h3>
+        <h3 className="truncate font-bold">{manga.attributes.title["en"]}</h3>
         <p className="text-muted-foreground">{author?.attributes?.name}</p>
       </div>
     </div>
