@@ -1,7 +1,6 @@
 //sample: http://localhost:3000/chapter/157282a2-d627-45ac-ab3a-8a7769a5945b
 
-import { getChapterImages } from "@/lib/fetchers";
-import { getTestURLs } from "@/lib/ytmusic";
+import { getChapterImages, getRecommendedURLs } from "@/lib/fetchers";
 import { Suspense } from "react";
 import PageViewport from "./_components/page-viewport";
 
@@ -13,8 +12,7 @@ export default async function ChapterIdPage({
   const { chapterId } = await params;
 
   const imagesPromise = getChapterImages(chapterId);
-  // const songsPromise = getRecommendedURLs(chapterId);
-  const songsPromise = getTestURLs();
+  const songsPromise = getRecommendedURLs(chapterId);
 
   return (
     <Suspense fallback={<div>Loading...</div>}>
