@@ -12,8 +12,10 @@ export default function MangaCard({ manga }: MangaCardProps) {
   const coverFileName = manga.relationships.find((r) => r.type === "cover_art")
     ?.attributes?.fileName;
   const coverUrl = coverFileName
-    ? `https://uploads.mangadex.org/covers/${manga.id}/${coverFileName}.256.jpg`
+    ? `https://uploads.mangadex.org/covers/${manga.id}/${coverFileName}.512.jpg`
     : null;
+
+  const proxyUrl = `/api/proxy/image?url=${encodeURIComponent(coverUrl || "")}`;
 
   const onClick = () => {
     router.push(`/title/${manga.id}`);
@@ -26,7 +28,7 @@ export default function MangaCard({ manga }: MangaCardProps) {
     >
       <div className="min-h-0 flex-1">
         <img
-          src={coverUrl!}
+          src={proxyUrl!}
           alt={manga.attributes.title["en"]}
           className="h-full w-full object-cover"
         />

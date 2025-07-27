@@ -46,8 +46,10 @@ export default function MangaViewport({
     (r) => r.type === "cover_art"
   )?.attributes?.fileName;
   const coverUrl = coverFileName
-    ? `https://uploads.mangadex.org/covers/${mangaId}/${coverFileName}.256.jpg`
+    ? `https://uploads.mangadex.org/covers/${mangaId}/${coverFileName}`
     : null;
+
+  const proxyUrl = `/api/proxy/image?url=${encodeURIComponent(coverUrl || "")}`;
 
   const handleReadWithMusic = (chapterId: string) => {
     router.push(`/chapter/${chapterId}?music=true`);
@@ -77,9 +79,9 @@ export default function MangaViewport({
       <div className="hidden flex-col p-6 md:flex">
         <div className="flex flex-col gap-8">
           <div className="flex gap-8">
-            {coverUrl && (
+            {proxyUrl && (
               <img
-                src={coverUrl}
+                src={proxyUrl}
                 alt="Cover Art"
                 className="h-auto w-64 rounded-xl object-cover shadow-lg"
               />
@@ -186,9 +188,9 @@ export default function MangaViewport({
       </div>
       <div className="flex flex-col items-stretch justify-center md:hidden">
         <div className="w-full">
-          {coverUrl && (
+          {proxyUrl && (
             <img
-              src={coverUrl}
+              src={proxyUrl}
               alt="Cover Art"
               className="h-full w-full object-cover"
             />
