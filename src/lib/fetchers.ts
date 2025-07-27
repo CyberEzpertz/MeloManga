@@ -251,11 +251,16 @@ export async function getRecommendedURLs(
         })
       ); // Filter out any null results
 
+      const video = urls.filter((a) => a !== null)[0];
+
       // Filter out failed searches and return segment info
       return {
         start: segment.start,
         end: segment.end,
-        src: urls.filter((a) => a !== null)[0], // Take first successful result
+        src: video.url, // Take first successful result
+        thumbnailUrl: video.thumbnailUrl || "",
+        title: video.title || "",
+        artist: video.artist || "",
       };
     })
   );

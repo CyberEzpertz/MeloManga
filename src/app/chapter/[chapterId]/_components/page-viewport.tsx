@@ -4,8 +4,6 @@ import { getRecommendedMusic } from "@/actions/recommendations";
 import PlayerBar from "@/components/player-bar";
 import { Button } from "@/components/ui/button";
 import { getRecommendedURLs } from "@/lib/fetchers";
-import { moodToSeedSongs } from "@/lib/moods";
-import { getSongsFeatures } from "@/lib/reccobeats";
 import { ChevronLeft, Settings2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Suspense, use, useState } from "react";
@@ -33,14 +31,6 @@ export default function PageViewport({
 
   const handleBack = () => {
     router.back();
-  };
-
-  const handleMoodSongs = async () => {
-    const songs = await getSongsFeatures(moodToSeedSongs["action"]);
-
-    songs.map((song) => {
-      console.log(song);
-    });
   };
 
   const handlePage = (direction: "next" | "prev") => {
@@ -94,6 +84,14 @@ export default function PageViewport({
       <Suspense fallback={<div>Loading music...</div>}>
         <PlayerBar currentPage={page + 1} songsPromise={songsPromise} />
       </Suspense>
+
+      {/* Progress Bar */}
+      <div className="fixed right-0 bottom-0 left-0 h-1.5 bg-zinc-200">
+        <div
+          className="h-full border border-blue-600 bg-blue-500 transition-all duration-300"
+          style={{ width: `${((page + 1) / images.length) * 100}%` }}
+        />
+      </div>
     </div>
   );
 }

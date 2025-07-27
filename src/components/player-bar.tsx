@@ -6,12 +6,16 @@ import { Pause, Play } from "lucide-react";
 import ReactPlayer from "react-player";
 
 import { getRecommendedURLs } from "@/lib/fetchers";
+import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
 
 export interface MusicSegment {
   src: string;
   start: number;
   end: number;
+  title?: string;
+  thumbnailUrl?: string;
+  artist?: string;
 }
 
 interface PlayerProps {
@@ -25,16 +29,22 @@ export default function PlayerBar({ currentPage, songsPromise }: PlayerProps) {
   const [currentTrack, setCurrentTrack] = useState<{
     src: string | null;
     volume: number;
+    title?: string;
+    artist?: string;
+    thumbnailUrl?: string;
   }>({
     src: sources[0]?.src || null,
     volume: 1,
+    title: sources[0]?.title,
+    artist: sources[0]?.artist,
+    thumbnailUrl: sources[0]?.thumbnailUrl,
   });
   const [nextSrc, setNextSrc] = useState<string | null>(null);
   const [isCrossfading, setIsCrossfading] = useState(false);
 
-  const fadeOutDuration = 3000; // 3 seconds fade out
-  const fadeInDuration = 6000; // 6 seconds fade in
-  const delayDuration = 1000; // 1000ms delay before fade in
+  const fadeOutDuration = 3000;
+  const fadeInDuration = 3000;
+  const delayDuration = 1000;
   const animationRef = useRef<number | null>(null);
   const startTimeRef = useRef<number | null>(null);
   const fadePhaseRef = useRef<"out" | "delay" | "in">("out");
@@ -69,6 +79,9 @@ export default function PlayerBar({ currentPage, songsPromise }: PlayerProps) {
           setCurrentTrack({
             src: newSrc,
             volume: 0,
+            title: sources.find((s) => s.src === newSrc)?.title,
+            artist: sources.find((s) => s.src === newSrc)?.artist,
+            thumbnailUrl: sources.find((s) => s.src === newSrc)?.thumbnailUrl,
           });
         }
       } else if (fadePhaseRef.current === "delay") {
@@ -120,7 +133,7 @@ export default function PlayerBar({ currentPage, songsPromise }: PlayerProps) {
   }, [currentPage, sources, currentTrack.src, nextSrc, isCrossfading]);
 
   return (
-    <div className="relative h-32 w-full">
+    <div className="relative h-28 w-full">
       <ReactPlayer
         src={currentTrack.src || undefined}
         style={{ display: "none" }}
@@ -128,13 +141,43 @@ export default function PlayerBar({ currentPage, songsPromise }: PlayerProps) {
         volume={currentTrack.volume}
         controls={true}
       />
-      <div className="fixed inset-x-0 mx-auto h-32">
-        <div className="m-4 flex flex-row rounded-xl bg-zinc-800 p-4">
-          <Button className="h-8 w-8 p-1" asChild onClick={onPlayButtonClick}>
+      <div className="fixed inset-x-0 bottom-3 mx-auto">
+        <div
+          className={cn(
+            "m-4 flex flex-row items-center justify-between rounded-xl bg-zinc-800 p-4",
+            isCrossfading && fadePhaseRef.current === "out" && "animate-pulse"
+          )}
+        >
+          {/* Thumbnail */}
+          <div className="size-8 flex-shrink-0 overflow-hidden rounded-md">
+            <img
+              src={currentTrack.thumbnailUrl || "/placeholder.png"}
+              alt={currentTrack.title || "Music"}
+              className="h-full w-full object-cover"
+            />
+          </div>
+
+          {/* Title and Artist */}
+          <div className="mx-4 flex flex-grow flex-col">
+            <span className="text-sm font-medium text-white">
+              {currentTrack.title || "Unknown Title"}
+            </span>
+            <span className="text-xs text-zinc-400">
+              {currentTrack.artist || "Unknown Artist"}
+            </span>
+          </div>
+
+          {/* Play/Pause Button */}
+          <Button
+            className="ml-auto flex-shrink-0"
+            variant="ghost"
+            size="icon"
+            onClick={onPlayButtonClick}
+          >
             {playing ? (
-              <Pause fill="#EAF2FF" stroke="#EAF2FF" />
+              <Pause className="h-5 w-5 text-white" fill="#FFF" />
             ) : (
-              <Play fill="#EAF2FF" stroke="#EAF2FF" />
+              <Play className="h-5 w-5 text-white" fill="#FFF" />
             )}
           </Button>
         </div>
