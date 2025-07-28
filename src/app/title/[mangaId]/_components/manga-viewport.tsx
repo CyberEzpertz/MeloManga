@@ -86,12 +86,11 @@ export default function MangaViewport({
                   src={proxyUrl}
                   alt="Cover Art"
                   fill
-                  objectFit="cover"
                   data-loaded="false"
                   onLoad={(event) => {
                     event.currentTarget.setAttribute("data-loaded", "true");
                   }}
-                  className="h-full w-full flex-1 data-[loaded=false]:animate-pulse data-[loaded=false]:bg-gray-100/20"
+                  className="h-full w-full flex-1 object-cover data-[loaded=false]:animate-pulse data-[loaded=false]:bg-gray-100/80"
                 />
               )}
             </div>
@@ -202,12 +201,11 @@ export default function MangaViewport({
               src={proxyUrl}
               alt="Cover Art"
               fill
-              objectFit="cover"
               data-loaded="false"
               onLoad={(event) => {
                 event.currentTarget.setAttribute("data-loaded", "true");
               }}
-              className="h-full w-full flex-1 data-[loaded=false]:animate-pulse data-[loaded=false]:bg-gray-100/20"
+              className="h-full w-full flex-1 object-cover data-[loaded=false]:animate-pulse data-[loaded=false]:bg-gray-100/80"
             />
           )}
         </div>
