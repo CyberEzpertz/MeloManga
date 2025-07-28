@@ -97,7 +97,6 @@ export async function getTitleRecommendations(
   searchParams.append("size", NUM_RECOMMENDATIONS.toString());
   searchParams.append("seeds", seedSongs.join(","));
   searchParams.append("instrumentalness", "0.8");
-  searchParams.append("instrumentalness_weight", "3.0");
 
   // Fetch recommendations
   const response = await fetch(
