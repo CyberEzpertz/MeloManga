@@ -17,8 +17,8 @@ const audioFeaturesSchema = z.object({
   valence: z.number(),
 });
 
-type AudioFeatures = z.infer<typeof audioFeaturesSchema>;
-type EnrichedAudioFeatures = AudioFeatures & { title: string };
+export type AudioFeatures = z.infer<typeof audioFeaturesSchema>;
+export type EnrichedAudioFeatures = AudioFeatures & { title: string };
 
 export async function getSongsFeatures(
   songIds: string[]

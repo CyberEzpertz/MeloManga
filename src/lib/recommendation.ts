@@ -163,6 +163,3 @@ export async function getMoodSegments(
     throw error;
   }
 }
-
-// Uncomment to run test
-// testMoodAnalysis().catch(console.error);

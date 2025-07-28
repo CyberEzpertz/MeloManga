@@ -14,10 +14,11 @@ export default async function ChapterIdPage({
 }) {
   const { chapterId } = await params;
   const withMusic = (await searchParams)["music"] === "true";
+  const scored = (await searchParams)["scored"] === "true";
 
   const imagesPromise = getChapterImages(chapterId);
   const songsPromise = withMusic
-    ? getRecommendedURLs(chapterId)
+    ? getRecommendedURLs(chapterId, scored)
     : Promise.resolve([]);
 
   return (

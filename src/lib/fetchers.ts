@@ -1,62 +1,15 @@
 import { MusicSegment } from "@/components/player-bar";
 import { PDFDocument } from "pdf-lib";
-import { moodToSeedSongs } from "./moods";
+import { Mood, moodToSeedSongs } from "./moods";
+import { getSongsFeatures } from "./reccobeats";
 import { getMoodSegments } from "./recommendation";
 import {
   RecommendationParameters,
   trackContentResponseSchema,
 } from "./schemas";
+import { scoreRecommendation } from "./scoring";
 import { Chapter, Manga } from "./types";
 import { getYoutubeURLResult } from "./ytmusic";
-
-// NOTE: keep this commented here for now in case the current fetchMangaDetails breaks
-// type Tag = {
-//   id: string;
-//   type: string;
-//   attributes:{
-//     name: {
-//       [lang: string]: string;
-//     };
-//     group: string;
-//   };
-// };
-
-// export async function fetchMangaDetails(mangaId:string){
-//   try{
-//     const res = await fetch('https://api.mangadex.org/manga/${mangaId}?includes[]=author&includes[]=artist&includes[]=tags');
-//     const data = await res.json();
-//     const manga = data.data;
-//     const attributes = manga.attributes
-//     const title = attributes.title.en;
-//     const description = attributes.description.en;
-
-//     // get author and artist
-//     const author = manga.relationships.find((rel: any) => rel.type === "author")?.attributes.name ?? "Unknown";
-//     const artist = manga.relationships.find((rel: any) => rel.type === "artist")?.attributes.name ?? "Unknown";
-
-//     const tags = attributes.tags.map((tag: any) => ({
-//       name: tag.attributes.name.en,
-//       group: tag.attributes.group,
-//     }));
-
-//     const genres = tags.filter((t: Tag) => t.attributes.group === "genre").map((t: Tag) => t.attributes.name);
-//     const themes = tags.filter((t: Tag) => t.attributes.group === "theme").map((t: Tag) => t.attributes.name);
-//     const demographic = tags.find((t: Tag) => t.attributes.group === "demographic")?.name ?? "Unknown";
-
-//     return {
-//       title,
-//       description,
-//       author,
-//       artist,
-//       genres,
-//       themes,
-//       demographic,
-//     };
-//   } catch (error){
-//     console.error("Whoops, failed to fetch details for this manga:", error);
-//     return null;
-//   }
-// }
 
 export async function fetchMangaDetails(mangaId: string): Promise<Manga> {
   const res = await fetch(
@@ -108,8 +61,17 @@ export async function getChapterImages(chapterId: string) {
 // Refer to this: https://reccobeats.com/docs/apis/get-recommendation
 export async function getTitleRecommendations(
   parameters: RecommendationParameters,
-  moodCategory: string
-) {
+  moodCategory: string,
+  scored: boolean = false
+): Promise<
+  Array<{
+    href: string;
+    title: string;
+    id: string;
+    artist: string;
+    score?: number;
+  }>
+> {
   const myHeaders = new Headers();
 
   // Convert parameters to URLSearchParams
@@ -131,13 +93,13 @@ export async function getTitleRecommendations(
     );
   }
 
-  const NUM_RECOMMENDATIONS = 2;
-
+  const NUM_RECOMMENDATIONS = 10;
   searchParams.append("size", NUM_RECOMMENDATIONS.toString());
   searchParams.append("seeds", seedSongs.join(","));
-  searchParams.append("instrumentalness", "1.0");
+  searchParams.append("instrumentalness", "0.8");
 
-  const recommendations = await fetch(
+  // Fetch recommendations
+  const response = await fetch(
     `https://api.reccobeats.com/v1/track/recommendation?${searchParams.toString()}`,
     {
       method: "GET",
@@ -146,38 +108,79 @@ export async function getTitleRecommendations(
     }
   );
 
-  if (!recommendations.ok) {
+  if (!response.ok) {
     console.error("Failed to fetch recommendations");
     console.log(searchParams.toString());
     return [];
   }
 
-  const result = await recommendations.json();
-
+  const result = await response.json();
   const parsed = trackContentResponseSchema.safeParse(result);
 
-  if (parsed.success === false) {
+  if (!parsed.success) {
     console.error("Failed to parse recommendations:", parsed.error);
     return [];
   }
 
-  // console.log("Recommendations received:", parsed.data);
+  // Get audio features for filtering by instrumentalness
+  console.log("Getting audio features for recommendations...");
+  const recommendedIds = parsed.data.content.map((item) => item.id);
+  const audioFeatures = await getSongsFeatures(recommendedIds);
+  const featuresMap = new Map(
+    audioFeatures.map((features) => [features.id, features])
+  );
 
-  const data = parsed.data.content.map((item) => ({
-    href: item.href,
-    title: item.trackTitle,
-    id: item.id,
-    artist: item.artists
-      .map((a) => a.name)
-      .slice(0, 2)
-      .join(", "),
-  }));
+  // Process recommendations
+  type Recommendation = {
+    href: string;
+    title: string;
+    id: string;
+    artist: string;
+    score?: number;
+  };
 
-  return data;
+  const filteredRecommendations: Recommendation[] = parsed.data.content
+    .map((item) => {
+      const features = featuresMap.get(item.id);
+      if (!features || features.instrumentalness < 0.8) return null;
+
+      const baseRecommendation = {
+        href: item.href,
+        title: item.trackTitle,
+        id: item.id,
+        artist: item.artists
+          .map((a) => a.name)
+          .slice(0, 2)
+          .join(", "),
+      };
+
+      if (!scored) return baseRecommendation;
+
+      const score = scoreRecommendation(
+        features,
+        parameters,
+        moodCategory as Mood
+      );
+      return score > 0 ? { ...baseRecommendation, score } : null;
+    })
+    .filter((item): item is NonNullable<typeof item> => item !== null);
+
+  // Sort by score if in scored mode
+  if (scored) {
+    filteredRecommendations.sort((a, b) => {
+      const scoreA = typeof a.score === "number" ? a.score : 0;
+      const scoreB = typeof b.score === "number" ? b.score : 0;
+      return scoreB - scoreA;
+    });
+  }
+
+  console.log("Processed recommendations:", filteredRecommendations);
+  return filteredRecommendations;
 }
 
 export async function getRecommendedURLs(
-  chapterId: string
+  chapterId: string,
+  scored: boolean
 ): Promise<MusicSegment[]> {
   const imageUrls = await getChapterImages(chapterId);
 
@@ -209,7 +212,8 @@ export async function getRecommendedURLs(
       );
       const recommendations = await getTitleRecommendations(
         segment.parameters,
-        segment.moodCategory
+        segment.moodCategory,
+        scored
       );
 
       if (!recommendations || recommendations.length === 0) {
@@ -249,15 +253,14 @@ export async function getRecommendedURLs(
             return null;
           }
         })
-      ); // Filter out any null results
+      );
 
       const video = urls.filter((a) => a !== null)[0];
 
-      // Filter out failed searches and return segment info
       return {
         start: segment.start,
         end: segment.end,
-        src: video.url, // Take first successful result
+        src: video.url,
         thumbnailUrl: video.thumbnailUrl || "",
         title: video.title || "",
         artist: video.artist || "",
@@ -271,7 +274,6 @@ export async function getRecommendedURLs(
 async function createPDFFromImages(imageUrls: string[]) {
   const pdfDoc = await PDFDocument.create();
 
-  // Fetch all images in parallel and include content type
   const imageDataList = await Promise.all(
     imageUrls.map(async (url) => {
       const response = await fetch(url);
@@ -282,7 +284,6 @@ async function createPDFFromImages(imageUrls: string[]) {
     })
   );
 
-  // Process each image
   for (const { buffer, contentType } of imageDataList) {
     let image;
 
@@ -296,7 +297,6 @@ async function createPDFFromImages(imageUrls: string[]) {
     }
 
     const { width, height } = image.scale(1);
-
     const page = pdfDoc.addPage([width, height]);
     page.drawImage(image, {
       x: 0,

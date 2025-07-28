@@ -32,12 +32,11 @@ export default function MangaCard({ manga }: MangaCardProps) {
           src={proxyUrl!}
           alt={manga.attributes.title["en"]}
           fill
-          objectFit="cover"
           data-loaded="false"
           onLoad={(event) => {
             event.currentTarget.setAttribute("data-loaded", "true");
           }}
-          className="h-full w-full data-[loaded=false]:animate-pulse data-[loaded=false]:bg-gray-100/50"
+          className="h-full w-full object-cover data-[loaded=false]:animate-pulse data-[loaded=false]:bg-gray-100/80"
           decoding="async"
         />
       </div>
