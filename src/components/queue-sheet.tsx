@@ -36,7 +36,7 @@ export function QueueSheet({ songs, currentSong, setPage }: QueueSheetProps) {
             Here are the tracks for this manga.
           </SheetDescription>
         </SheetHeader>
-        <div className="flex flex-col gap-2 p-4 pt-0">
+        <div className="flex flex-col gap-2 overflow-y-auto p-4 pt-0">
           {songs.map((song) => (
             <div
               key={song.src}
