@@ -40,7 +40,7 @@ export function QueueSheet({ songs, currentSong, setPage }: QueueSheetProps) {
           {songs.map((song) => (
             <div
               key={song.src}
-              className={`flex items-start gap-4 rounded-lg border p-4 transition-colors ${
+              className={`hover:border-primary flex cursor-pointer items-start gap-4 rounded-lg border p-4 transition-colors ${
                 currentSong === song.src
                   ? "border-primary bg-primary/10"
                   : "border-border"

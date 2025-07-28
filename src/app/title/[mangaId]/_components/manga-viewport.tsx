@@ -3,7 +3,15 @@
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import type { Chapter, Manga } from "@/lib/types";
-import { Calendar, ChevronLeft, Eye, Music, User, Users } from "lucide-react";
+import {
+  Calendar,
+  ChevronLeft,
+  Eye,
+  Music,
+  Music4,
+  User,
+  Users,
+} from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { use } from "react";
@@ -52,8 +60,10 @@ export default function MangaViewport({
 
   const proxyUrl = `/api/proxy/image?url=${encodeURIComponent(coverUrl || "")}`;
 
-  const handleReadWithMusic = (chapterId: string) => {
-    router.push(`/chapter/${chapterId}?music=true`);
+  const handleReadWithMusic = (chapterId: string, scored: boolean = false) => {
+    router.push(
+      `/chapter/${chapterId}?music=true${scored ? "&scored=true" : ""}`
+    );
   };
 
   const handleRead = (chapterId: string) => {
@@ -174,6 +184,13 @@ export default function MangaViewport({
                         <Button
                           size="sm"
                           variant="outline"
+                          onClick={() => handleReadWithMusic(ch.id, true)}
+                        >
+                          <Music4 className="size-4" /> Read with Scored Music
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
                           onClick={() => handleReadWithMusic(ch.id)}
                         >
                           <Music className="size-4" /> Read with Music
@@ -267,6 +284,13 @@ export default function MangaViewport({
                       </div>
                     </div>
                     <div className="flex flex-col gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleReadWithMusic(ch.id, true)}
+                      >
+                        <Music4 className="size-4" /> Read with Scored Music
+                      </Button>
                       <Button
                         size="sm"
                         variant="outline"
