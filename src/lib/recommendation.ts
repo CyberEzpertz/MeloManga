@@ -39,7 +39,7 @@ async function pageAnalysisAgent(
        - Narrative text
        - Sound effects
     4. Emotional tone keywords
-    5. Confidence score`,
+    5. Confidence score (0.0-1.0)`,
     messages: [
       {
         role: "user",
