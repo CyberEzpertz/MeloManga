@@ -40,6 +40,17 @@ export default function PageViewport({
   const url = images[page] || "";
   const proxyUrl = `/api/proxy/chapter-image?url=${encodeURIComponent(url)}`;
 
+  // Preload the next two images
+  const preloadImages = [];
+  for (let i = 1; i <= 2; i++) {
+    if (page + i < images.length) {
+      const nextUrl = `/api/proxy/chapter-image?url=${encodeURIComponent(images[page + i])}`;
+      preloadImages.push(
+        <img key={page + i} src={nextUrl} alt="" style={{ display: "none" }} />
+      );
+    }
+  }
+
   return (
     <div className="flex h-screen max-h-screen w-full flex-col items-center">
       <div className="border-border flex w-full flex-row items-center justify-between border-b px-4 py-2">
@@ -93,6 +104,8 @@ export default function PageViewport({
           style={{ width: `${((page + 1) / images.length) * 100}%` }}
         />
       </div>
+      {/* Preloaded Images */}
+      {preloadImages}
     </div>
   );
 }
