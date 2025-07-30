@@ -38,6 +38,7 @@ export default function PageViewport({
   };
 
   const url = images[page] || "";
+  const proxyUrl = `/api/proxy/chapter-image?url=${encodeURIComponent(url)}`;
 
   return (
     <div className="flex h-screen max-h-screen w-full flex-col items-center">
@@ -57,7 +58,7 @@ export default function PageViewport({
       </div>
       <div className="relative flex min-h-0 flex-1 self-stretch">
         {/* Tap Zones */}
-        <div className="absolute flex h-full w-full flex-row">
+        <div className="absolute z-50 flex h-full w-full flex-row">
           <div
             className="h-full w-2/5 cursor-pointer"
             onClick={() => handlePage("prev")}
@@ -70,7 +71,7 @@ export default function PageViewport({
 
         {/* Image */}
         <div className="mx-auto my-auto flex max-h-full min-h-0">
-          <img src={url} alt={`Page ${page}`} className="object-contain" />
+          <img src={proxyUrl} alt={`Page ${page}`} className="object-contain" />
         </div>
       </div>
       {images.length === 0 && <p>No images found.</p>}

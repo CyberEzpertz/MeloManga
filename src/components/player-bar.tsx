@@ -149,7 +149,7 @@ export default function PlayerBar({
         volume={currentTrack.volume}
         controls={true}
       />
-      <div className="fixed inset-x-0 bottom-3 mx-auto">
+      <div className="fixed inset-x-0 bottom-3 z-20 mx-auto">
         <div
           className={cn(
             "bg-card border-border m-4 flex flex-row items-center justify-between rounded-xl border p-4 shadow-lg",
